@@ -1,0 +1,40 @@
+package com.integration.items;
+
+import com.integration.items.ErrorAction;
+
+
+rule "Return CallCWS"
+	when 
+		error: ErrorAction((marketplaceCode=="WALMART" || marketplaceCode=="walmart" || marketplaceCode=="Walmart") 
+		       && (feedType=="MP_ITEM_MATCH" && errorDetails=="Data_Error"))
+	then
+		error.setInvokeAction("CallCWSUpdateStatus");
+	end
+rule "Return SendEmailAndLogError if errorDetails not equal to Data_Error"	
+	when 
+		error: ErrorAction((marketplaceCode=="WALMART" || marketplaceCode=="walmart" || marketplaceCode=="Walmart") 
+		       && (feedType=="MP_ITEM_MATCH" && errorDetails!="Data_Error"))
+	then
+		error.setInvokeAction("SendEmailUpdateStatusAndLogError");
+	end
+rule "Return SendEmailAndLogError if feedType equal to MP_ITEM/PRICE/INVENTORY"	
+	when 
+		error: ErrorAction((marketplaceCode=="WALMART" || marketplaceCode=="walmart" || marketplaceCode=="Walmart") 
+		       && (feedType=="MP_ITEM" || feedType=="PRICE" || feedType=="INVENTORY"))
+	then
+		error.setInvokeAction("SendEmailAndLogError");
+	end	
+rule "Return SendEmailAndLogError if MarketPlace not equal to Walmart"
+	when 
+		error: ErrorAction((marketplaceCode!="WALMART" && marketplaceCode!="walmart" && marketplaceCode!="Walmart") 
+		               || (feedType!="MP_ITEM_MATCH" && feedType!="MP_ITEM" && feedType!="PRICE" && feedType!="INVENTORY"))
+	then
+		error.setInvokeAction("SendEmailAndLogError");
+	end	
+rule "Return NoAction"
+	when 
+		error: ErrorAction((marketplaceCode=="WALMART" || marketplaceCode=="walmart" || marketplaceCode=="Walmart") 
+		       && (errorDetails=="NEW" || errorDetails=="INPROGRESS" || errorDetails=="SUCCESS"))
+	then
+		error.setInvokeAction("NoAction");
+	end	
